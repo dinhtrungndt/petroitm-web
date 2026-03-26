@@ -1,14 +1,18 @@
 import api from '../../../services/api';
 import { removeToken, setToken } from '../../../utils/Token';
 import {
-  FETCH_USER_SUCCESS, LOGIN_FAILURE, LOGIN_REQUEST,
-  LOGIN_SUCCESS, LOGOUT
+  FETCH_USER_FAILURE,
+  FETCH_USER_REQUEST,
+  FETCH_USER_SUCCESS,
+  LOGIN_FAILURE,
+  LOGIN_REQUEST,
+  LOGIN_SUCCESS,
+  LOGOUT
 } from './authTypes';
 
 export const loginAction = (username, password) => async (dispatch) => {
   dispatch({ type: LOGIN_REQUEST });
   try {
-    // FastAPI OAuth2PasswordRequestForm yêu cầu gửi dưới dạng Form Data
     const formData = new FormData();
     formData.append('username', username);
     formData.append('password', password);
@@ -19,8 +23,8 @@ export const loginAction = (username, password) => async (dispatch) => {
 
     const { access_token, user, menus } = response.data;
 
-    // Lưu token vào localStorage (đã mã hóa qua utils)
     setToken(access_token);
+    localStorage.setItem('menus', JSON.stringify(menus));
 
     dispatch({
       type: LOGIN_SUCCESS,
@@ -36,15 +40,28 @@ export const loginAction = (username, password) => async (dispatch) => {
 };
 
 export const fetchCurrentUserAction = () => async (dispatch) => {
+  dispatch({ type: FETCH_USER_REQUEST });
   try {
-    const response = await api.get('/users/me');
-    dispatch({ type: FETCH_USER_SUCCESS, payload: response.data });
+    const userRes = await api.get('/users/me');
+
+    const storedMenus = JSON.parse(localStorage.getItem('menus') || '[]');
+
+    dispatch({
+      type: FETCH_USER_SUCCESS,
+      payload: {
+        user: userRes.data,
+        menus: storedMenus
+      }
+    });
   } catch (error) {
-    dispatch(logoutAction());
+    dispatch({ type: FETCH_USER_FAILURE });
+    removeToken();
+    localStorage.removeItem('menus');
   }
 };
 
 export const logoutAction = () => (dispatch) => {
   removeToken();
+  localStorage.removeItem('menus');
   dispatch({ type: LOGOUT });
 };

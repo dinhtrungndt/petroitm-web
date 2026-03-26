@@ -7,13 +7,13 @@ import { getToken } from "./utils/Token";
 
 function App() {
   const dispatch = useDispatch();
+  const token = getToken();
 
   useEffect(() => {
-    const token = getToken();
     if (token) {
       dispatch(fetchCurrentUserAction());
     }
-  }, [dispatch]);
+  }, [dispatch, token]);
 
   return (
     <>

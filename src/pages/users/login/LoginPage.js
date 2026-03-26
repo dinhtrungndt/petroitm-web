@@ -2,10 +2,12 @@ import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Images } from '../../../constants/images/Images';
 import { loginAction } from '../../../stores/redux/auth/authActions';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +20,7 @@ const LoginPage = () => {
     const result = await dispatch(loginAction(username, password));
     if (result.success) {
       toast.success('Đăng nhập thành công!');
-      window.location.href = '/dashboard';
+      navigate('/dashboard');
     } else {
       toast.error(result.message);
     }
