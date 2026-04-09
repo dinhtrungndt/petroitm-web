@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { getToken } from '../utils/Token';
 
+const getBaseURL = () => {
+  const host = window.location.hostname;
+  const port = '4111';
+  return `http://${host}:${port}/api/v1`;
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
