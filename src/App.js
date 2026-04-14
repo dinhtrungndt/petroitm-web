@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import AutoUpdater from './pages/home/dashboard/AutoUpdater';
 import Routers from "./routers";
 import { fetchCurrentUserAction } from './stores/redux/auth/authActions';
 import { getToken } from "./utils/Token";
@@ -30,6 +31,7 @@ function App() {
           },
         }}
       />
+      <AutoUpdater />
       <Routers />
     </>
   );

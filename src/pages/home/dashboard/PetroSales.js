@@ -4,29 +4,28 @@ import {
   CheckCircle2,
   CreditCard,
   Filter,
-  Info, Landmark, Loader2,
+  Info,
+  Loader2,
   Printer,
   Search
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '../../../services/api';
 
+// Component hiển thị QR Code
 const QRCodeDisplay = ({ value, size = 150 }) => {
   if (!value) return null;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`;
   return <img src={qrUrl} alt="QR Code" width={size} height={size} className="mx-auto" />;
 };
 
-const BANK_CONFIGS = [
-  { id: 'Vietcombank', name: 'Vietcombank', account: '0006970436' },
-  { id: 'VietinBank', name: 'VietinBank', account: '0006970415' },
-  { id: 'TPBank', name: 'TPBank', account: '0006970423' },
-  { id: 'BIDV', name: 'BIDV', account: '0006970418' },
-  { id: 'VIB', name: 'VIB', account: '0006970441' },
-  { id: 'ACB', name: 'ACB', account: '0006970416' },
-  { id: 'PVcomBank', name: 'PVcomBank', account: '0006970412' },
-  { id: 'VPBank', name: 'VPBank', account: '0006970432' }
-];
+// ==========================================
+// CẤU HÌNH FIX CỨNG 1 NGÂN HÀNG DUY NHẤT
+// ==========================================
+const VCB_CONFIG = {
+  id: 'Vietcombank',
+  account: '0006970436'
+};
 
 const PetroSales = () => {
   const [sales, setSales] = useState([]);
@@ -36,7 +35,7 @@ const PetroSales = () => {
   const [qrValue, setQrValue] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('WAITING');
 
-  const [selectedBankId, setSelectedBankId] = useState(localStorage.getItem('petro_bank_id') || 'Vietcombank');
+  // Các State xử lý form
   const [showCashConfirm, setShowCashConfirm] = useState(false);
   const [showTransferConfirm, setShowTransferConfirm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,16 +48,16 @@ const PetroSales = () => {
 
   useEffect(() => { fetchPumps(); }, []);
 
+  // TỰ ĐỘNG TẠO QR VCB KHI MỞ MODAL HÓA ĐƠN
   useEffect(() => {
     if (selectedSale) {
       const fetchQR = async () => {
         setQrValue('');
         try {
-          const bankInfo = BANK_CONFIGS.find(b => b.id === selectedBankId) || BANK_CONFIGS[0];
           const res = await api.get('/petro/qr-content', {
             params: {
-              bank: bankInfo.id,
-              account: bankInfo.account,
+              bank: VCB_CONFIG.id,
+              account: VCB_CONFIG.account,
               amount: selectedSale.ThanhTien.toString(),
               content: selectedSale.MaBienLai
             }
@@ -68,8 +67,9 @@ const PetroSales = () => {
       };
       fetchQR();
     }
-  }, [selectedSale, selectedBankId]);
+  }, [selectedSale]);
 
+  // SOCKET LẮNG NGHE THANH TOÁN
   useEffect(() => {
     let socket = null;
     if (selectedSale && paymentStatus === 'WAITING') {
@@ -93,11 +93,6 @@ const PetroSales = () => {
     setShowCashConfirm(false);
     setShowTransferConfirm(false);
     setIsProcessing(false);
-  };
-
-  const handleSelectBank = (bankId) => {
-    setSelectedBankId(bankId);
-    localStorage.setItem('petro_bank_id', bankId);
   };
 
   const handlePayCash = async () => {
@@ -210,7 +205,7 @@ const PetroSales = () => {
                   s.HinhThucThanhToan === 2 ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
                     <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Trụ bơm</span>
@@ -229,7 +224,7 @@ const PetroSales = () => {
                   <span className="font-black text-slate-900 text-base text-blue-700">{s.ThanhTien?.toLocaleString()}</span>
                 </div>
               </div>
-              
+
               <div className="mt-2 pt-3 border-t border-slate-100 flex justify-end">
                 <button onClick={() => setSelectedSale(s)} className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-xs transition-colors border border-slate-200">
                   <Printer size={16} className="text-blue-600" /> Thao tác / Thanh toán
@@ -245,10 +240,11 @@ const PetroSales = () => {
       {selectedSale && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-white relative max-h-[95vh] flex flex-col">
+
             <div className="p-4 md:p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2">
                 <Info size={18} className="text-blue-400" />
-                <span className="font-bold uppercase tracking-tight text-sm text-white">Xác nhận thanh toán</span>
+                <span className="font-bold uppercase tracking-tight text-sm text-white">Thanh toán hóa đơn</span>
               </div>
               <button onClick={closeModal} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white text-xl leading-none">✕</button>
             </div>
@@ -256,39 +252,16 @@ const PetroSales = () => {
             <div className="p-4 md:p-6 space-y-6 overflow-y-auto w-full scrollbar-hide">
               {paymentStatus === 'WAITING' && (
                 <>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">1. Chọn ngân hàng nhận</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                      {BANK_CONFIGS.map(b => (
-                        <button
-                          key={b.id}
-                          onClick={() => handleSelectBank(b.id)}
-                          className={`relative p-3 rounded-xl text-[10px] font-black transition-all border flex flex-col items-center justify-center gap-1.5 h-16
-                                        ${selectedBankId === b.id
-                              ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-md ring-1 ring-blue-600'
-                              : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-slate-50'
-                            }`}
-                        >
-                          <Landmark size={18} className={selectedBankId === b.id ? "text-blue-600" : "text-slate-400"} />
-                          <span className="truncate w-full text-center uppercase">{b.name}</span>
-                          {selectedBankId === b.id && (
-                            <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-sm">
-                              <CheckCircle2 size={18} className="text-blue-600 fill-blue-100" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start">
+                  <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start pt-2">
+                    {/* KHU VỰC QR CODE */}
                     <div className="bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center shrink-0 w-full max-w-[220px] md:w-auto mx-auto font-bold">
                       <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                         {qrValue ? <QRCodeDisplay value={qrValue} size={150} /> : <div className="w-[150px] h-[150px] bg-slate-100 flex items-center justify-center rounded-xl"><Loader2 className="animate-spin text-slate-300" /></div>}
                       </div>
-                      <p className="mt-3 text-[10px] font-black text-blue-600 tracking-wider uppercase">Quét QR</p>
+                      <p className="mt-3 text-[10px] font-black text-blue-600 tracking-wider uppercase">Quét QR Vietcombank</p>
                     </div>
 
+                    {/* THÔNG TIN HÓA ĐƠN */}
                     <div className="flex-1 space-y-4 w-full">
                       <div>
                         <p className="text-xs text-slate-400 uppercase font-bold mb-1">Cần thu</p>
@@ -304,6 +277,7 @@ const PetroSales = () => {
                     </div>
                   </div>
 
+                  {/* BỘ NÚT XÁC NHẬN THỦ CÔNG */}
                   <div className="flex flex-col gap-3 pt-2 border-t border-slate-100">
                     {!showCashConfirm ? (
                       <button onClick={() => { setShowCashConfirm(true); setShowTransferConfirm(false); }} className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-2xl transition-all text-xs uppercase">

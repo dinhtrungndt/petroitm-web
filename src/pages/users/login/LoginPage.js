@@ -1,13 +1,12 @@
-import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, LogIn, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { Images } from '../../../constants/images/Images';
 import { loginAction } from '../../../stores/redux/auth/authActions';
 
+const APP_VERSION = "1.0.12";
+
 const LoginPage = () => {
-  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +19,7 @@ const LoginPage = () => {
     const result = await dispatch(loginAction(username, password));
     if (result.success) {
       toast.success('Đăng nhập thành công!');
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } else {
       toast.error(result.message);
     }
@@ -32,10 +31,10 @@ const LoginPage = () => {
         <div className="p-8">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-2xl mb-4 shadow-inner">
-              <img src={Images.logoLogin} alt="Logo" className="w-10 h-10" />
+              <LogIn className="w-10 h-10 text-blue-600" />
             </div>
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">PETRO ITM</h1>
-            <p className="text-gray-500 mt-2 font-medium">Hệ thống quản lý nội bộ 2.0</p>
+            <p className="text-gray-500 mt-2 font-medium">Quản lý hóa đơn điện tử</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -99,9 +98,12 @@ const LoginPage = () => {
           </form>
         </div>
 
-        <div className="bg-gray-50 px-8 py-6 border-t border-gray-100 text-center">
+        <div className="bg-gray-50 px-8 py-6 border-t border-gray-100 flex flex-col items-center justify-center gap-1">
           <p className="text-sm text-gray-500 font-medium">
             Bạn chưa có tài khoản? <span className="text-blue-600 cursor-pointer hover:underline">Liên hệ quản trị viên</span>
+          </p>
+          <p className="text-[11px] font-bold text-gray-400 mt-2 uppercase tracking-widest">
+            Phiên bản {APP_VERSION}
           </p>
         </div>
       </div>

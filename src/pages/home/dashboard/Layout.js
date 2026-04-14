@@ -5,6 +5,9 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutAction } from '../../../stores/redux/auth/authActions';
+import AutoUpdater from './AutoUpdater';
+
+const APP_VERSION = "1.0.12";
 
 const Layout = ({ children }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -46,16 +49,29 @@ const Layout = ({ children }) => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
-          <button onClick={handleLogout} className="w-full flex items-center gap-4 p-3 text-red-400 hover:bg-red-900/30 rounded-xl transition-all font-bold">
+        <div className="p-4 border-t border-slate-800 flex flex-col items-center">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-4 p-3 text-red-400 hover:bg-red-900/30 rounded-xl transition-all font-bold">
             <LogOut size={24} />
             {!isSidebarCollapsed && <span>Đăng xuất</span>}
           </button>
+
+          {/* HIỂN THỊ PHIÊN BẢN Ở ĐÁY MENU */}
+          {!isSidebarCollapsed && (
+            <div className="mt-4 text-center">
+              <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Phiên bản {APP_VERSION}</span>
+            </div>
+          )}
+          {isSidebarCollapsed && (
+            <div className="mt-4 text-center">
+              <span className="text-[9px] text-slate-600 font-bold">v{APP_VERSION}</span>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* 2. MAIN AREA & HEADER */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <AutoUpdater />
         <header className="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm z-10">
           <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
