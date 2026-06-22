@@ -168,8 +168,16 @@ const PetroSales = () => {
   const handlePayCash = async () => {
     setIsProcessing(true);
     try {
-      await api.post(`/petro/pay-cash/${selectedSale.DocTru_id}`);
+      const res = await api.post(`/petro/pay-cash/${selectedSale.DocTru_id}`);
+      if (res.data && res.data.success === false) {
+        alert("Lỗi: " + res.data.message);
+      } else {
+        setPaymentStatus('SUCCESS');
+        setTimeout(() => { closeModal(); handleSearch(); }, 1500);
+      }
     } catch (error) {
+      alert("Lỗi kết nối máy chủ");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -177,11 +185,18 @@ const PetroSales = () => {
   const handlePayTransfer = async () => {
     setIsProcessing(true);
     try {
-      // Xác nhận chuyển khoản kèm theo ID hình thức thanh toán được chọn
-      await api.post(`/petro/pay-transfer/${selectedSale.DocTru_id}`, {
+      const res = await api.post(`/petro/pay-transfer/${selectedSale.DocTru_id}`, {
         hinh_thuc_thanh_toan: selectedPaymentMethod
       });
+      if (res.data && res.data.success === false) {
+        alert("Lỗi: " + res.data.message);
+      } else {
+        setPaymentStatus('SUCCESS');
+        setTimeout(() => { closeModal(); handleSearch(); }, 1500);
+      }
     } catch (error) {
+      alert("Lỗi kết nối máy chủ");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -284,8 +299,8 @@ const PetroSales = () => {
                   <td className="p-4 text-right font-mono font-bold text-slate-700">{s.SoLuong?.toLocaleString()}</td>
                   <td className="p-4 text-right font-black text-slate-900">{s.ThanhTien?.toLocaleString()}</td>
                   <td className="p-4 text-center">
-                    {s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
-                      s.HinhThucThanhToan === 2 ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
+                    {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
+                      s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
                         <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
                   </td>
                   <td className="p-4 text-center">
@@ -328,8 +343,8 @@ const PetroSales = () => {
             <div key={s.DocTru_id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-blue-600 text-sm">#{s.MaBienLai}</span>
-                {s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
-                  s.HinhThucThanhToan === 2 ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
+                {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
+                  s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
                     <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
               </div>
 
