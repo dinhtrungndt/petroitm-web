@@ -50,6 +50,57 @@ const PetroSales = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  // Batch Issue Invoices
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+
+  const handleSelectAll = (e) => {
+    const currentPaginated = sales.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    if (e.target.checked) {
+      setSelectedInvoices(currentPaginated.map(s => s.DocTru_id));
+    } else {
+      setSelectedInvoices([]);
+    }
+  };
+
+  const handleSelectOne = (e, docTruId) => {
+    if (e.target.checked) {
+      setSelectedInvoices([...selectedInvoices, docTruId]);
+    } else {
+      setSelectedInvoices(selectedInvoices.filter(id => id !== docTruId));
+    }
+  };
+
+  const handleBatchIssueInvoices = async () => {
+    if (selectedInvoices.length === 0) {
+      alert("Vui lòng chọn ít nhất một hóa đơn cần xuất.");
+      return;
+    }
+    const confirmIssue = window.confirm(`Bạn có chắc chắn muốn phát hành ${selectedInvoices.length} hóa đơn đã chọn?`);
+    if (!confirmIssue) return;
+
+    setIsProcessing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const docTruId of selectedInvoices) {
+      try {
+        const res = await api.post(`/petro/xuat-hoa-don-tu-doctru/${docTruId}`);
+        if (res.data && res.data.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    setIsProcessing(false);
+    setSelectedInvoices([]);
+    alert(`Đã xử lý xong!\nThành công: ${successCount}\nThất bại: ${failCount}`);
+    handleSearch();
+  };
+
   // State quản lý AutoInvoice Config
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [config, setConfig] = useState({
@@ -66,7 +117,8 @@ const PetroSales = () => {
   const [filters, setFilters] = useState({
     tu_ngay: new Date().toISOString().split('T')[0],
     den_ngay: new Date().toISOString().split('T')[0],
-    tru_id: ''
+    tru_id: '',
+    trang_thai_hd: 'CHUA_XUAT'
   });
 
   // Tải danh sách Trụ bơm và Danh mục thanh toán khi khởi tạo trang
@@ -74,6 +126,13 @@ const PetroSales = () => {
     fetchPumps();
     fetchPaymentMethods();
     fetchConfig();
+    handleSearch({
+      tu_ngay: new Date().toISOString().split('T')[0],
+      den_ngay: new Date().toISOString().split('T')[0],
+      tru_id: '',
+      trang_thai_hd: 'CHUA_XUAT'
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConfig = async () => {
@@ -224,13 +283,24 @@ const PetroSales = () => {
     } catch (err) { }
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (overrideFilters = null) => {
     setLoading(true);
     try {
-      const queryParams = { ...filters };
+      const queryParams = { ...(overrideFilters || filters) };
+      const trangThai = queryParams.trang_thai_hd;
+      delete queryParams.trang_thai_hd;
+
       if (queryParams.tru_id === '') delete queryParams.tru_id;
       const res = await api.get('/petro/sales', { params: queryParams });
-      setSales(res.data);
+      
+      let data = res.data || [];
+      if (trangThai === 'DA_XUAT') {
+         data = data.filter(s => s.SoHoaDon);
+      } else if (trangThai === 'CHUA_XUAT') {
+         data = data.filter(s => !s.SoHoaDon);
+      }
+
+      setSales(data);
       setCurrentPage(1); // Trở về trang 1 sau khi tìm kiếm
     } catch (err) { } finally { setLoading(false); }
   };
@@ -251,7 +321,7 @@ const PetroSales = () => {
             <Settings size={16} /> Cài đặt Hóa đơn
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6 items-end">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Từ ngày</label>
             <input type="date" value={filters.tu_ngay} onChange={e => setFilters({ ...filters, tu_ngay: e.target.value })} className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-700" />
@@ -267,7 +337,15 @@ const PetroSales = () => {
               {pumps.map(p => <option key={p.Tru_id} value={p.Tru_id}>{p.MaTru}</option>)}
             </select>
           </div>
-          <button onClick={handleSearch} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Trạng thái HĐ</label>
+            <select value={filters.trang_thai_hd} onChange={e => setFilters({ ...filters, trang_thai_hd: e.target.value })} className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-700 appearance-none">
+              <option value="ALL">-- Tất cả --</option>
+              <option value="CHUA_XUAT">Chưa phát hành</option>
+              <option value="DA_XUAT">Đã phát hành</option>
+            </select>
+          </div>
+          <button onClick={() => handleSearch()} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50">
             {loading ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
             <span>TÌM KIẾM</span>
           </button>
@@ -276,23 +354,41 @@ const PetroSales = () => {
 
       {/* DANH SÁCH LƯỢT BƠM */}
       <section className="bg-transparent md:bg-white md:rounded-3xl shadow-none md:shadow-sm border-transparent md:border md:border-slate-200 overflow-hidden">
+        {/* THANH CÔNG CỤ XUẤT HÀNG LOẠT */}
+        {selectedInvoices.length > 0 && (
+          <div className="bg-blue-50 border-b border-blue-100 p-3 flex justify-between items-center">
+            <span className="text-sm font-bold text-blue-700">Đã chọn {selectedInvoices.length} hóa đơn</span>
+            <button onClick={handleBatchIssueInvoices} disabled={isProcessing} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm text-xs transition-all disabled:opacity-50 flex items-center gap-2">
+              {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+              Xuất Hóa Đơn Hàng Loạt
+            </button>
+          </div>
+        )}
+
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-400 text-[10px] font-black uppercase">
               <tr>
+                <th className="p-4 w-12 text-center">
+                  <input type="checkbox" onChange={handleSelectAll} checked={paginatedSales.length > 0 && selectedInvoices.length === paginatedSales.length} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                </th>
                 <th className="p-4">Mã phiếu</th>
                 <th className="p-4">Trụ</th>
                 <th className="p-4">Thời gian</th>
                 <th className="p-4 text-right">Số lượng (L)</th>
                 <th className="p-4 text-right">Thành tiền (đ)</th>
-                <th className="p-4 text-center">Trạng thái</th>
+                <th className="p-4 text-center">Trạng thái TT</th>
+                <th className="p-4 text-center">Hóa đơn</th>
                 <th className="p-4 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {paginatedSales.length > 0 ? paginatedSales.map((s) => (
                 <tr key={s.DocTru_id} className="hover:bg-blue-50/50 transition-colors group">
+                  <td className="p-4 text-center">
+                    <input type="checkbox" checked={selectedInvoices.includes(s.DocTru_id)} onChange={(e) => handleSelectOne(e, s.DocTru_id)} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                  </td>
                   <td className="p-4 font-bold text-blue-600">{s.MaBienLai}</td>
                   <td className="p-4 font-medium text-slate-700">{s.MaTru}</td>
                   <td className="p-4 text-slate-500 text-xs">{new Date(s.ThoiGianLu).toLocaleString('vi-VN')}</td>
@@ -302,6 +398,16 @@ const PetroSales = () => {
                     {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
                       s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
                         <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
+                  </td>
+                  <td className="p-4 text-center">
+                    {s.SoHoaDon ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ XUẤT</span>
+                        <span className="text-[9px] text-slate-400 font-mono tracking-wider">{s.SoHoaDon}</span>
+                      </div>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA XUẤT</span>
+                    )}
                   </td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center gap-2">
@@ -340,12 +446,22 @@ const PetroSales = () => {
         {/* Mobile View */}
         <div className="md:hidden flex flex-col gap-4">
           {paginatedSales.length > 0 ? paginatedSales.map((s) => (
-            <div key={s.DocTru_id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-              <div className="flex justify-between items-center">
+            <div key={s.DocTru_id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3 relative">
+              <div className="absolute top-4 right-4 z-10">
+                 <input type="checkbox" checked={selectedInvoices.includes(s.DocTru_id)} onChange={(e) => handleSelectOne(e, s.DocTru_id)} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+              </div>
+              <div className="flex justify-between items-center pr-8">
                 <span className="font-bold text-blue-600 text-sm">#{s.MaBienLai}</span>
-                {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
-                  s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
-                    <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
+                <div className="flex gap-2">
+                  {s.SoHoaDon ? (
+                    <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-[10px] font-bold">HĐ: {s.SoHoaDon}</span>
+                  ) : (
+                    <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA XUẤT</span>
+                  )}
+                  {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
+                    s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
+                      <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
