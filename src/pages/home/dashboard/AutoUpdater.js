@@ -1,9 +1,10 @@
-import { DownloadCloud, Loader2 } from 'lucide-react';
+import { DownloadCloud, Loader2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '../../../services/api';
 
 const AutoUpdater = () => {
   const [updateInfo, setUpdateInfo] = useState(null);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [statusText, setStatusText] = useState('CẬP NHẬT NGAY');
 
@@ -57,9 +58,28 @@ const AutoUpdater = () => {
 
   if (!updateInfo) return null;
 
+  if (isDismissed) {
+    return (
+      <button
+        onClick={() => setIsDismissed(false)}
+        className="fixed bottom-4 right-4 z-[9999] bg-blue-600 hover:bg-blue-700 text-white p-3 pb-1 pt-2 rounded-full shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2 group animate-in slide-in-from-bottom-5"
+      >
+        <DownloadCloud size={20} className="animate-bounce" />
+        <span className="text-xs font-bold max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap">Có bản cập nhật!</span>
+      </button>
+    );
+  }
+
   return (
     <div className="fixed bottom-4 right-4 z-[9999] bg-white p-4 rounded-2xl shadow-2xl border border-blue-200 flex flex-col gap-3 max-w-sm animate-in slide-in-from-bottom-5">
-      <div className="flex items-start gap-3">
+      <button
+        onClick={() => setIsDismissed(true)}
+        className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+      >
+        <X size={16} />
+      </button>
+
+      <div className="flex items-start gap-3 mt-1">
         <div className="p-2 bg-blue-100 text-blue-600 rounded-full shrink-0 animate-bounce">
           <DownloadCloud size={20} />
         </div>

@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutAction } from '../../../stores/redux/auth/authActions';
-import AutoUpdater from './AutoUpdater';
 
 const APP_VERSION = "1.0.12";
 
@@ -71,7 +70,6 @@ const Layout = ({ children }) => {
 
       {/* 2. MAIN AREA & HEADER */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AutoUpdater />
         <header className="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm z-10">
           <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
