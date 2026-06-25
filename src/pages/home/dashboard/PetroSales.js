@@ -82,6 +82,8 @@ const PetroSales = () => {
     let successCount = 0;
     let failCount = 0;
 
+    // Tạm thời comment code xuất hóa đơn lên cổng VNPT
+    /*
     for (const docTruId of selectedInvoices) {
       try {
         const res = await api.post(`/petro/xuat-hoa-don-tu-doctru/${docTruId}`);
@@ -94,6 +96,11 @@ const PetroSales = () => {
         failCount++;
       }
     }
+    */
+    
+    // Giả lập thành công để không gọi API
+    successCount = selectedInvoices.length;
+    alert("Đã tạm khóa chức năng xuất hóa đơn lên cổng. Chọn: " + successCount);
 
     setIsProcessing(false);
     setSelectedInvoices([]);
@@ -263,12 +270,16 @@ const PetroSales = () => {
   const handleIssueInvoice = async (docTruId) => {
     setIsProcessing(true);
     try {
+      // Tạm thời comment code xuất hóa đơn lên cổng VNPT
+      /*
       const res = await api.post(`/petro/xuat-hoa-don-tu-doctru/${docTruId}`);
       if (res.data.success) {
         alert("Phát hành hóa đơn thành công!");
       } else {
         alert("Lỗi: " + res.data.error);
       }
+      */
+      alert("Tính năng phát hành hóa đơn lên cổng đang tạm khóa để bảo trì!");
     } catch (error) {
       alert("Lỗi kết nối tới server");
     } finally {
@@ -355,6 +366,7 @@ const PetroSales = () => {
       {/* DANH SÁCH LƯỢT BƠM */}
       <section className="bg-transparent md:bg-white md:rounded-3xl shadow-none md:shadow-sm border-transparent md:border md:border-slate-200 overflow-hidden">
         {/* THANH CÔNG CỤ XUẤT HÀNG LOẠT */}
+        {/* Tạm khóa xuất hàng loạt
         {selectedInvoices.length > 0 && (
           <div className="bg-blue-50 border-b border-blue-100 p-3 flex justify-between items-center">
             <span className="text-sm font-bold text-blue-700">Đã chọn {selectedInvoices.length} hóa đơn</span>
@@ -364,6 +376,7 @@ const PetroSales = () => {
             </button>
           </div>
         )}
+        */}
 
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
@@ -414,9 +427,11 @@ const PetroSales = () => {
                       <button onClick={() => setSelectedSale(s)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-lg border border-transparent hover:border-blue-100 transition-all" title="Thanh toán / In">
                         <Printer size={18} />
                       </button>
+                      {/* Tạm khóa phát hành HĐ
                       <button onClick={() => handleIssueInvoice(s.DocTru_id)} className="p-2 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-lg border border-transparent hover:border-green-100 transition-all" title="Phát hành Hóa đơn điện tử">
                         <FileText size={18} />
                       </button>
+                      */}
                     </div>
                   </td>
                 </tr>
@@ -484,9 +499,11 @@ const PetroSales = () => {
               </div>
 
               <div className="mt-2 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                {/* Tạm khóa phát hành HĐ
                 <button onClick={() => handleIssueInvoice(s.DocTru_id)} className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-[11px] transition-colors border border-slate-200">
                   <FileText size={14} className="text-green-600" /> Xuất HĐ
                 </button>
+                */}
                 <button onClick={() => setSelectedSale(s)} className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-[11px] transition-colors border border-slate-200">
                   <Printer size={14} className="text-blue-600" /> TT / In
                 </button>
@@ -608,9 +625,11 @@ const PetroSales = () => {
                     )}
                     
                     {/* BỘ NÚT XUẤT HÓA ĐƠN THỦ CÔNG TRONG MODAL */}
+                    {/* Tạm khóa phát hành HĐ
                     <button onClick={() => handleIssueInvoice(selectedSale.DocTru_id)} disabled={isProcessing} className="w-full flex items-center justify-center gap-2 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-black rounded-2xl transition-all text-xs uppercase border border-green-200 mt-2">
                       <FileText size={16} /> Phát hành Hóa đơn điện tử
                     </button>
+                    */}
                   </div>
                 </>
               )}
