@@ -409,7 +409,7 @@ const PetroSales = () => {
                   <td className="p-4 text-right font-black text-slate-900">{s.ThanhTien?.toLocaleString()}</td>
                   <td className="p-4 text-center">
                     {s.LoaiThanhToan === 'TM' || s.HinhThucThanhToan === 1 ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-[10px] font-bold">TIỀN MẶT</span> :
-                      s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">ĐÃ CK</span> :
+                      s.LoaiThanhToan === 'CK' || (s.HinhThucThanhToan && s.HinhThucThanhToan !== 1) ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold">CHUYỂN KHOẢN</span> :
                         <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">CHƯA TT</span>}
                   </td>
                   <td className="p-4 text-center">
